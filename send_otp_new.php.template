@@ -1,0 +1,109 @@
+<?php
+// Disable error display
+error_reporting(0);
+ini_set('display_errors', 0);
+
+// Start output buffering
+ob_start();
+
+// Include PHPMailer classes
+require_once 'PHPMailer/src/Exception.php';
+require_once 'PHPMailer/src/PHPMailer.php';
+require_once 'PHPMailer/src/SMTP.php';
+
+require 'vendor/autoload.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+// Set headers
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// Clear any previous output
+ob_clean();
+
+try {
+    // Get the email from POST data
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+    $email = isset($data['email']) ? $data['email'] : '';
+
+    if (empty($email)) {
+        throw new Exception('Email is required');
+    }
+
+    // Generate OTP
+    $otp = sprintf("%06d", mt_rand(1, 999999));
+    $expiry = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+
+    // Database connection
+    $pdo = new PDO("mysql:host=localhost;dbname=login_db", "root", "");
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Check if email exists
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->execute([$email]);
+    if (!$stmt->fetch()) {
+        throw new Exception('Email not found');
+    }
+
+    // Update or insert OTP
+    $stmt = $pdo->prepare("INSERT INTO otp_table (email, otp, expiry) VALUES (?, ?, ?) 
+                          ON DUPLICATE KEY UPDATE otp = VALUES(otp), expiry = VALUES(expiry)");
+    $success = $stmt->execute([$email, $otp, $expiry]);
+
+    if (!$success) {
+        throw new Exception('Failed to save OTP');
+    }
+
+    // Create a new PHPMailer instance
+    $mail = new PHPMailer(true);
+
+    // SMTP configuration
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = 587;
+
+    // Gmail credentials
+    $mail->Username = 'YOUR_EMAIL@gmail.com'; // Replace with your Gmail
+    $mail->Password = 'YOUR_APP_PASSWORD'; // Replace with your app password
+
+    // Email content
+    $mail->setFrom('YOUR_EMAIL@gmail.com', 'Password Reset');
+    $mail->addAddress($email);
+    $mail->isHTML(true);
+    $mail->Subject = 'Your OTP for Password Reset';
+    $mail->Body = "Your OTP is: <b>$otp</b><br>This OTP will expire in 15 minutes.";
+
+    // Send email
+    $mail->send();
+
+    // Clear output buffer before sending response
+    ob_clean();
+
+    echo json_encode([
+        'status' => 'success',
+        'message' => 'OTP sent successfully'
+    ]);
+
+} catch (Exception $e) {
+    http_response_code(400);
+    echo json_encode([
+        'status' => 'error',
+        'message' => $e->getMessage()
+    ]);
+}
+
+// End output buffering and exit
+ob_end_flush();
+exit(); 

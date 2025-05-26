@@ -1,0 +1,92 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# IDE files
+.vscode/
+.idea/
+
+# Sensitive files with credentials
+send_otp_new.php
+api/config.php
+index.html
+
+# Template files will be included
+!send_otp_new.php.template
+!api/config.php.template
+!index.html.template
+
+# Log files
+*.log
+error_log
+access_log
+
+# Database files
+*.sql
+*.sqlite
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Cache and session files
+/cache/
+/sessions/
+
+# Composer
+composer.lock
+
+# Environment and sensitive files
+.env
+*.env
+.env.local
+.env.*.local
+mysql_info.php
+test_db.php
+setup.php
+create_db.php
+create_table.php
+test.php
+check_users.php
+email_errors.log
+test_mail.php
+download_phpmailer.php
+
+# Keep templates
+!*.template
+!database.sql
+
+# PHPMailer credentials and sensitive data
+vendor/
+.env
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+error_log
+access_log
+
+# Cache and session files
+/cache/
+/sessions/ 

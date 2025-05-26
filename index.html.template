@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | Personal Book App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Sign-In Script -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
+</head>
+<body>
+
+  <!-- Floating Icons Background -->
+  <div class="floating-icon"></div>
+  <div class="floating-icon"></div>
+  <div class="floating-icon"></div>
+  <div class="floating-icon"></div>
+  <div class="floating-icon"></div>
+
+  <div class="container" id="formContainer">
+    <h2 id="formTitle">Personal Book App</h2>
+
+    <!-- Google Sign-In Button -->
+    <div class="google-signin-container">
+      <div id="g_id_onload"
+        data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+        data-context="signin"
+        data-ux_mode="popup"
+        data-callback="handleGoogleSignIn"
+        data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin"
+        data-type="standard"
+        data-shape="rectangular"
+        data-theme="filled_blue"
+        data-text="signin_with"
+        data-size="large"
+        data-logo_alignment="center"
+        data-width="280">
+      </div>
+    </div>
+
+    <div class="separator">or</div>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+      <div class="mb-3">
+        <input type="email" class="form-control" id="loginUser" placeholder="Email" required>
+      </div>
+      <div class="mb-3">
+        <input type="password" class="form-control" id="loginPass" placeholder="Password" required>
+      </div>
+      <button type="submit" class="btn btn-login w-100">Login</button>
+      <div id="loginError" class="error-message"></div>
+      <div class="link">
+        <a href="#" onclick="toggleForm('forgot')">Forgot Password?</a> |
+        <a href="#" onclick="toggleForm('signup')">Create Account</a>
+      </div>
+    </form>
+
+    <!-- Signup Form -->
+    <form id="signupForm" style="display: none;">
+      <div class="mb-3">
+        <input type="text" class="form-control" id="newUser" placeholder="Full Name" required>
+      </div>
+      <div class="mb-3">
+        <input type="email" class="form-control" id="newEmail" placeholder="Email" required>
+      </div>
+      <div class="mb-3">
+        <input type="password" class="form-control" id="newPass" placeholder="Password" required>
+      </div>
+      <div class="mb-3">
+        <input type="password" class="form-control" id="confirmPass" placeholder="Confirm Password" required>
+      </div>
+      <button type="submit" class="btn btn-login w-100">Sign Up</button>
+      <div id="signupError" class="error-message"></div>
+      <div class="link">
+        <a href="#" onclick="toggleForm('login')">Already have an account? Login</a>
+      </div>
+    </form>
+
+    <!-- Forgot Password Form -->
+    <form id="forgotForm" style="display: none;">
+      <div class="mb-3">
+        <input type="email" class="form-control" id="forgotEmail" placeholder="Enter your email" required>
+      </div>
+      <button type="submit" class="btn btn-login w-100">Send OTP</button>
+      <div id="forgotError" class="error-message"></div>
+      <div class="link">
+        <a href="#" onclick="toggleForm('login')">Back to Login</a>
+      </div>
+    </form>
+
+    <!-- OTP Verification Form -->
+    <form id="otpForm" style="display: none;">
+      <div class="mb-3">
+        <input type="text" class="form-control" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}" required>
+      </div>
+      <button type="submit" class="btn btn-login w-100">Verify OTP</button>
+      <div id="otpError" class="error-message"></div>
+      <div class="link">
+        <a href="#" onclick="toggleForm('forgot')">Resend OTP</a>
+      </div>
+    </form>
+
+    <!-- New Password Form -->
+    <form id="newPasswordForm" style="display: none;">
+      <div class="mb-3">
+        <input type="password" class="form-control" id="newPassword" placeholder="New Password" required>
+      </div>
+      <div class="mb-3">
+        <input type="password" class="form-control" id="confirmNewPassword" placeholder="Confirm New Password" required>
+      </div>
+      <button type="submit" class="btn btn-login w-100">Reset Password</button>
+      <div id="newPasswordError" class="error-message"></div>
+    </form>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard" id="dashboard" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3>Welcome to your Dashboard!</h3>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+    <div class="table-responsive mt-4">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable">
+          <!-- Data will be dynamically inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html> 

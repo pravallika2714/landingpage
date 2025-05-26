@@ -1,0 +1,306 @@
+/* Modern CSS Reset and Base Styles */
+* { 
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    height: 100%;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to bottom right, #f8ecec, #fef9f5);
+    color: #2d3436;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Container Styles */
+.container {
+    position: relative;
+    z-index: 2;
+    background: #fffdfb;
+    border-radius: 20px;
+    padding: 50px 40px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+    margin: auto;
+    margin-top: 10vh;
+}
+
+.container:hover {
+    transform: translateY(-5px);
+}
+
+/* Form Styles */
+h2 {
+    color: #5c415d;
+    margin-bottom: 30px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.form-control {
+    background: #f9f6f4;
+    border: 1px solid #d8cfc8;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 15px;
+    color: #3d3d3d;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.form-control:focus {
+    border-color: #a8928e;
+    box-shadow: 0 0 0 3px rgba(172, 142, 150, 0.2);
+    outline: none;
+}
+
+.btn-login {
+    background: #6b4065;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+    font-weight: 500;
+    transition: 0.3s ease;
+    width: 100%;
+    cursor: pointer;
+}
+
+.btn-login:hover {
+    background: #583050;
+}
+
+/* Link Styles */
+.link, .error-message {
+    font-size: 14px;
+    color: #7a6c5c;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.link a {
+    color: #6b4065;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.link a:hover {
+    text-decoration: underline;
+}
+
+/* Error Message Styles */
+.error-message {
+    color: #d9534f;
+    display: none;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: rgba(217, 83, 79, 0.1);
+    margin-bottom: 15px;
+}
+
+.error-message.show {
+    display: block;
+}
+
+/* Google Sign-In Container */
+.google-signin-container {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+/* Separator Style */
+.separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+    color: #636e72;
+    font-size: 0.9rem;
+}
+
+.separator::before,
+.separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.separator::before {
+    margin-right: 1rem;
+}
+
+.separator::after {
+    margin-left: 1rem;
+}
+
+/* Dashboard Styles */
+.dashboard {
+    display: none;
+    text-align: center;
+    margin-top: 50px;
+    font-size: 18px;
+}
+
+.table {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.table thead {
+    background: linear-gradient(45deg, #6c5ce7, #a55eea);
+    color: white;
+}
+
+.table th {
+    padding: 1rem;
+    font-weight: 500;
+}
+
+.table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Button Styles */
+.btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #6c5ce7;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #5a4bd1;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: #ff4757;
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #e8394a;
+    transform: translateY(-2px);
+}
+
+/* Loading Animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .container { 
+        padding: 35px 25px;
+        margin-top: 5vh;
+    }
+}
+
+/* Success Message Animation */
+@keyframes slideIn {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.success-message {
+    animation: slideIn 0.3s ease forwards;
+    background: rgba(46, 213, 115, 0.1);
+    color: #2ed573;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Form Transition Animations */
+.form-group {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.form-group.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #6c5ce7;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5a4bd1;
+}
+
+/* Floating Icons */
+.floating-icon {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    background: url('https://cdn-icons-png.flaticon.com/512/29/29302.png') no-repeat center;
+    background-size: contain;
+    opacity: 0.05;
+    animation: floatUp 30s linear infinite;
+    z-index: 0;
+}
+
+@keyframes floatUp {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0.05; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0.1; }
+}
+
+.floating-icon:nth-child(1) { left: 5%; animation-delay: 0s; }
+.floating-icon:nth-child(2) { left: 20%; animation-delay: 4s; }
+.floating-icon:nth-child(3) { left: 45%; animation-delay: 2s; }
+.floating-icon:nth-child(4) { left: 65%; animation-delay: 3s; }
+.floating-icon:nth-child(5) { left: 85%; animation-delay: 1s; }
