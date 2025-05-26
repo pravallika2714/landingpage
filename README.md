@@ -39,11 +39,7 @@ A secure password reset system with email OTP verification built using PHP, MySQ
    define('GOOGLE_CLIENT_ID', 'your-client-id.apps.googleusercontent.com');
    ```
 
-### For Quick Testing (Optional)
-You can use these test credentials:
-- Gmail: nimmii0914@gmail.com
-- App Password: ddkwuluadicnbmds
-- Google Client ID: 981917202489-i1r28amea7o390v900hjho99ju6h0hl3.apps.googleusercontent.com
+
 
 ## Database Configuration
 
