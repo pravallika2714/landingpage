@@ -20,10 +20,15 @@ index.html
 *.log
 error_log
 access_log
+api/error.log
+api/email_errors.log
+api/otp_errors.log
+api/verify_otp_errors.log
 
 # Database files
 *.sql
 *.sqlite
+database.php
 
 # OS generated files
 .DS_Store
@@ -46,6 +51,8 @@ composer.lock
 *.env
 .env.local
 .env.*.local
+config.local.php
+email_config.local.php
 mysql_info.php
 test_db.php
 setup.php
@@ -53,7 +60,6 @@ create_db.php
 create_table.php
 test.php
 check_users.php
-email_errors.log
 test_mail.php
 download_phpmailer.php
 
@@ -89,4 +95,11 @@ access_log
 
 # Cache and session files
 /cache/
-/sessions/ 
+/sessions/
+
+# PHPMailer credentials
+phpmailer/email_config.php
+
+# Test files
+test_*.php
+*_test.php 
