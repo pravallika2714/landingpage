@@ -8,16 +8,28 @@ try {
         email VARCHAR(255) NOT NULL,
         otp VARCHAR(6) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        expires_at TIMESTAMP NULL,
+        expires_at TIMESTAMP NOT NULL,
         is_used TINYINT(1) DEFAULT 0,
         INDEX idx_email (email),
         INDEX idx_otp (otp)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
     $pdo->exec($sql);
-    echo json_encode(['success' => true, 'message' => 'OTP table created successfully']);
+    
+    // Add error logging
+    error_log("OTP table creation attempted");
+    
+    // Check if table was created
+    $check = $pdo->query("SHOW TABLES LIKE 'otp_codes'");
+    if ($check->rowCount() > 0) {
+        error_log("OTP table exists after creation attempt");
+        echo json_encode(['success' => true, 'message' => 'OTP table created successfully']);
+    } else {
+        error_log("OTP table does not exist after creation attempt");
+        echo json_encode(['success' => false, 'message' => 'Failed to create OTP table']);
+    }
 
 } catch (PDOException $e) {
     error_log("Database error in create_otp_table.php: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Database error occurred']);
+    echo json_encode(['success' => false, 'message' => 'Database error occurred: ' . $e->getMessage()]);
 } 

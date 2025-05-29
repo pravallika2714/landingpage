@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'email_config.php';
 
 // Set proper CORS headers
 header('Access-Control-Allow-Origin: http://localhost');
@@ -60,40 +61,9 @@ try {
     </body>
     </html>";
 
-    // Plain text version
-    $textMessage = "Your OTP for password reset is: {$otp}\n\nThis OTP will expire in 15 minutes.\nIf you didn't request this, please ignore this email.";
-
-    // Email Headers
-    $headers = "MIME-Version: 1.0\r\n";
-    $headers .= "Content-Type: multipart/alternative; boundary=\"boundary\"\r\n";
-    $headers .= "From: Personal Book App <noreply@personalbook.com>\r\n";
-    $headers .= "Reply-To: noreply@personalbook.com\r\n";
-    $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
-
-    // Create the message body
-    $message = "--boundary\r\n";
-    $message .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $message .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
-    $message .= $textMessage . "\r\n\r\n";
-    $message .= "--boundary\r\n";
-    $message .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $message .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
-    $message .= $htmlMessage . "\r\n\r\n";
-    $message .= "--boundary--";
-
-    // Debug information
-    error_log("Sending email to: " . $email);
-    error_log("OTP generated: " . $otp);
-    error_log("Current PHP mail configuration:");
-    error_log("SMTP = " . ini_get('SMTP'));
-    error_log("smtp_port = " . ini_get('smtp_port'));
-    error_log("sendmail_path = " . ini_get('sendmail_path'));
-
-    // Send email
-    $mailSent = mail($email, $subject, $message, $headers);
-    
-    if ($mailSent) {
-        error_log("Email sent successfully to " . $email);
+    // Send email using Gmail SMTP
+    try {
+        sendEmailWithGmail($email, $subject, $htmlMessage);
         // Store success in session for verification
         session_start();
         $_SESSION['otp_sent'] = true;
@@ -101,18 +71,16 @@ try {
         
         echo json_encode([
             'success' => true, 
-            'message' => 'OTP has been sent to your email. Please check your inbox and spam folder.',
-            'debug' => [
-                'email' => $email,
-                'time' => date('Y-m-d H:i:s'),
-                'smtp_server' => ini_get('SMTP'),
-                'smtp_port' => ini_get('smtp_port')
-            ]
+            'message' => 'OTP has been sent to your email. Please check your inbox and spam folder.'
         ]);
-    } else {
-        $error = error_get_last();
-        error_log("Failed to send email. Error: " . ($error ? json_encode($error) : 'Unknown error'));
-        throw new Exception('Failed to send email. Please check server configuration.');
+    } catch (Exception $e) {
+        error_log("Error in send_otp.php: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Failed to send OTP. Please try again.',
+            'error' => $e->getMessage()
+        ]);
     }
 
 } catch (Exception $e) {
@@ -121,11 +89,6 @@ try {
     echo json_encode([
         'success' => false,
         'message' => 'Failed to send OTP. Please try again.',
-        'debug' => [
-            'error' => $e->getMessage(),
-            'smtp_server' => ini_get('SMTP'),
-            'smtp_port' => ini_get('smtp_port'),
-            'php_version' => phpversion()
-        ]
+        'error' => $e->getMessage()
     ]);
-} 
+}

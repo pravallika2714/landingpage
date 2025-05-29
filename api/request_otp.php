@@ -1,6 +1,8 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 0); // Disable displaying errors to prevent HTML output
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/otp_errors.log');
 date_default_timezone_set('Asia/Kolkata'); // Set to Indian timezone
 
 require_once 'config.php';
@@ -12,79 +14,80 @@ header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+    http_response_code(200);
+    exit();
 }
 
 try {
-    $data = json_decode(file_get_contents('php://input'), true);
+    $input = file_get_contents('php://input');
+    error_log("Received input: " . $input);
+    
+    $data = json_decode($input, true);
+    
+    if (!$data) {
+        throw new Exception('Invalid input data');
+    }
 
-    if (!isset($data['email'])) {
+    $email = isset($data['email']) ? trim($data['email']) : '';
+
+    if (empty($email)) {
         throw new Exception('Email is required');
     }
 
-    $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
-    if (!$email) {
-        throw new Exception('Invalid email format');
-    }
-
     // Check if user exists
-    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
-    
-    if ($stmt->rowCount() === 0) {
-        throw new Exception('Email not found');
+    if (!$stmt->fetch()) {
+        throw new Exception('No account found with this email');
     }
 
-    // Generate 6-digit OTP
-    $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    // Generate OTP
+    $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
     
-    // Set expiration time (15 minutes from now)
-    $current_time = new DateTime();
-    $expires_at = $current_time->modify('+15 minutes')->format('Y-m-d H:i:s');
+    // Set expiry time (15 minutes from now)
+    $expiry = new DateTime();
+    $expiry->modify('+15 minutes');
 
-    // Delete any existing unused OTPs for this email
-    $stmt = $pdo->prepare('DELETE FROM otp_codes WHERE email = ?');
-    $stmt->execute([$email]);
+    // Begin transaction
+    $pdo->beginTransaction();
 
-    // Insert new OTP
-    $stmt = $pdo->prepare('INSERT INTO otp_codes (email, otp, expires_at) VALUES (?, ?, ?)');
-    $stmt->execute([$email, $otp, $expires_at]);
+    try {
+        // Mark all previous unused OTPs as used
+        $stmt = $pdo->prepare("UPDATE otp_codes SET is_used = 1 WHERE email = ? AND is_used = 0");
+        $stmt->execute([$email]);
 
-    // Log OTP creation
-    error_log("New OTP created for $email: $otp, Expires at: $expires_at");
+        // Insert new OTP
+        $stmt = $pdo->prepare("
+            INSERT INTO otp_codes (email, otp, expires_at) 
+            VALUES (?, ?, ?)
+        ");
+        $stmt->execute([$email, $otp, $expiry->format('Y-m-d H:i:s')]);
 
-    // Prepare email content
-    $emailBody = "
-    <html>
-    <body style='font-family: Arial, sans-serif; line-height: 1.6;'>
-        <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
-            <h2 style='color: #333;'>Password Reset OTP</h2>
-            <p>You have requested to reset your password. Your OTP is:</p>
-            <div style='background: #f5f5f5; padding: 15px; text-align: center; font-size: 24px; letter-spacing: 5px;'>
-                <strong>$otp</strong>
-            </div>
-            <p>This OTP will expire in 15 minutes (at " . date('h:i A', strtotime($expires_at)) . ").</p>
-            <p><small>If you didn't request this password reset, please ignore this email.</small></p>
-        </div>
-    </body>
-    </html>";
+        // Send email
+        $to = $email;
+        $subject = "Password Reset OTP";
+        $message = "Your OTP for password reset is: $otp\nThis OTP will expire in 15 minutes.";
+        $headers = "From: noreply@yourdomain.com";
 
-    // Send OTP via email
-    if (sendEmailWithGmail($email, "Password Reset OTP", $emailBody)) {
+        if (!mail($to, $subject, $message, $headers)) {
+            throw new Exception('Failed to send OTP email');
+        }
+
+        $pdo->commit();
+
         echo json_encode([
             'success' => true,
-            'message' => 'OTP has been sent to your email',
-            'debug_info' => [
-                'expires_at' => $expires_at,
-                'current_time' => date('Y-m-d H:i:s')
-            ]
+            'message' => 'OTP has been sent to your email'
         ]);
-    } else {
-        throw new Exception('Failed to send OTP email');
+
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
     }
 
 } catch (Exception $e) {
-    error_log("OTP Request Error: " . $e->getMessage());
+    error_log("Error in request_otp.php: " . $e->getMessage());
+    
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()

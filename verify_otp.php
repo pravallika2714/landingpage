@@ -1,7 +1,9 @@
 <?php
 ob_start();
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/verify_otp_errors.log');
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -20,6 +22,8 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     $input = file_get_contents('php://input');
+    error_log("Received input: " . $input);
+    
     $data = json_decode($input, true);
     
     if (!$data) {
@@ -33,29 +37,30 @@ try {
         throw new Exception('Email and OTP are required');
     }
 
-    // Get user's OTP and expiry
-    $stmt = $pdo->prepare("SELECT otp, otp_expiry FROM users WHERE email = ?");
+    // Get OTP from otp_codes table
+    $stmt = $pdo->prepare("SELECT * FROM otp_codes WHERE email = ? AND is_used = 0 ORDER BY created_at DESC LIMIT 1");
     $stmt->execute([$email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $otpRecord = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$user) {
-        throw new Exception('User not found');
+    if (!$otpRecord) {
+        throw new Exception('No valid OTP found');
     }
 
-    if ($user['otp'] !== $otp) {
+    if ($otpRecord['otp'] !== $otp) {
+        error_log("OTP mismatch. Provided: $otp, Stored: " . $otpRecord['otp']);
         throw new Exception('Invalid OTP');
     }
 
     $now = new DateTime();
-    $expiry = new DateTime($user['otp_expiry']);
+    $expiry = new DateTime($otpRecord['expires_at']);
 
     if ($now > $expiry) {
         throw new Exception('OTP has expired');
     }
 
-    // Clear the OTP after successful verification
-    $stmt = $pdo->prepare("UPDATE users SET otp = NULL, otp_expiry = NULL WHERE email = ?");
-    $stmt->execute([$email]);
+    // Mark OTP as used
+    $stmt = $pdo->prepare("UPDATE otp_codes SET is_used = 1 WHERE id = ?");
+    $stmt->execute([$otpRecord['id']]);
 
     ob_clean();
     echo json_encode([
@@ -64,6 +69,9 @@ try {
     ]);
 
 } catch (Exception $e) {
+    error_log("Error in verify_otp.php: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
+    
     ob_clean();
     echo json_encode([
         'success' => false,

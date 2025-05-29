@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 
 try {
     // First connect without database name
-    $pdo = new PDO("mysql:host=localhost;port=4306", "root", "");
+    $pdo = new PDO("mysql:host=localhost;port=3306", "root", "");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Create database if it doesn't exist
@@ -14,44 +14,65 @@ try {
     // Switch to the database
     $pdo->exec("USE login_db");
     
-    // Create users table
+    // Create users table with proper constraints
     $sql = "CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) NOT NULL UNIQUE,
+        name VARCHAR(100) NOT NULL,
         email VARCHAR(100) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        password VARCHAR(255),
+        google_id VARCHAR(255) UNIQUE,
+        profile_picture VARCHAR(255),
+        otp VARCHAR(6),
+        otp_expiry TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_email (email),
+        KEY idx_google_id (google_id)
     )";
     
     $pdo->exec($sql);
     echo "Users table created or verified!\n";
     
-    // Check if test user exists
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM users WHERE email = ?");
-    $stmt->execute(['test@example.com']);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Drop existing otp_codes table if exists
+    $pdo->exec("DROP TABLE IF EXISTS otp_codes");
     
-    if ($result['count'] == 0) {
-        // Add test user
-        $username = "testuser";
-        $email = "test@example.com";
-        $password = password_hash("password123", PASSWORD_DEFAULT);
-        
-        $insert = $pdo->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-        $insert->execute([$username, $email, $password]);
-        echo "Test user created with:\nEmail: test@example.com\nPassword: password123\n";
-    } else {
-        echo "Test user already exists!\n";
-    }
+    // Create OTP table with proper constraints and indexes
+    $sql = "CREATE TABLE otp_codes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        otp VARCHAR(6) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP NOT NULL,
+        is_used TINYINT(1) DEFAULT 0,
+        INDEX idx_email (email),
+        INDEX idx_otp (otp),
+        INDEX idx_expiry (expires_at),
+        CONSTRAINT fk_user_email FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
+    )";
     
-    // List all users
-    $stmt = $pdo->query("SELECT id, username, email FROM users");
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $pdo->exec($sql);
+    echo "OTP table created or verified!\n";
     
-    echo "\nCurrent users in database:\n";
-    foreach ($users as $user) {
-        echo "ID: {$user['id']}, Username: {$user['username']}, Email: {$user['email']}\n";
-    }
+    // Create stored procedure for OTP cleanup
+    $pdo->exec("DROP PROCEDURE IF EXISTS cleanup_expired_otps");
+    $pdo->exec("
+        CREATE PROCEDURE cleanup_expired_otps()
+        BEGIN
+            DELETE FROM otp_codes WHERE expires_at < NOW() OR is_used = 1;
+        END
+    ");
+    
+    // Create event to automatically cleanup expired OTPs
+    $pdo->exec("DROP EVENT IF EXISTS cleanup_otps_event");
+    $pdo->exec("
+        CREATE EVENT cleanup_otps_event
+        ON SCHEDULE EVERY 1 HOUR
+        DO CALL cleanup_expired_otps()
+    ");
+    
+    // Enable event scheduler
+    $pdo->exec("SET GLOBAL event_scheduler = ON");
+    
+    echo "Database setup completed successfully!\n";
     
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage() . "\n";
