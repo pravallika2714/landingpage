@@ -304,3 +304,28 @@ h2 {
 .floating-icon:nth-child(3) { left: 45%; animation-delay: 2s; }
 .floating-icon:nth-child(4) { left: 65%; animation-delay: 3s; }
 .floating-icon:nth-child(5) { left: 85%; animation-delay: 1s; }
+
+/* Form Visibility */
+#signupForm, #loginForm, #forgotForm, #otpForm, #newPasswordForm {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+#signupForm.hidden, #loginForm.hidden, #forgotForm.hidden, #otpForm.hidden, #newPasswordForm.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Form Container */
+.form-container {
+    position: relative;
+    width: 100%;
+}
+
+/* Form Title */
+.form-title {
+    font-size: 24px;
+    color: #5c415d;
+    margin-bottom: 25px;
+    text-align: center;
+}

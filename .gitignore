@@ -6,15 +6,19 @@
 .vscode/
 .idea/
 
-# Sensitive files with credentials
-send_otp_new.php
-api/config.php
-index.html
+# Sensitive files
+config.php
+.env
+*.key
+*.pem
 
-# Template files will be included
-!send_otp_new.php.template
-!api/config.php.template
-!index.html.template
+# Credentials and sensitive data
+**/credentials.php
+**/secrets.php
+
+# Template files should be versioned, actual files ignored
+index.html
+send_otp_new.php
 
 # Log files
 *.log

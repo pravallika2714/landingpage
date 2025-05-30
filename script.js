@@ -278,11 +278,11 @@ function showSuccess(elementId, message) {
 // Google Sign-In handler
 async function handleGoogleSignIn(response) {
     try {
-    const credential = response.credential;
-    
+        const credential = response.credential;
+        
         const googleResponse = await fetch(`${API_URL}/google_login.php`, {
-        method: 'POST',
-        headers: {
+            method: 'POST',
+            headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ credential })
@@ -290,8 +290,19 @@ async function handleGoogleSignIn(response) {
 
         const data = await googleResponse.json();
         if (data.success) {
-            currentUser = data.user;
-            showDashboard();
+            // Store user data in localStorage with expiration
+            const userData = {
+                ...data.user,
+                exp: Date.now() / 1000 + 3600 // 1 hour expiration
+            };
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            currentUser = userData;
+            
+            // Update URL and show dashboard
+            window.location.hash = 'dashboard';
+            formContainer.style.display = 'none';
+            dashboard.style.display = 'block';
+            fetchAndDisplayData();
         } else {
             showError('loginError', data.message || 'Google Sign-In failed');
         }
@@ -309,7 +320,7 @@ loginForm.addEventListener('submit', async function(e) {
 
     try {
         const response = await fetch(`${API_URL}/login.php`, {
-        method: 'POST',
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
@@ -323,10 +334,19 @@ loginForm.addEventListener('submit', async function(e) {
 
         const data = await response.json();
         if (data.success) {
-            currentUser = data.user;
-            // Store user data in localStorage
-            localStorage.setItem('currentUser', JSON.stringify(data.user));
-            showDashboard();
+            // Store user data in localStorage with expiration
+            const userData = {
+                ...data.user,
+                exp: Date.now() / 1000 + 3600 // 1 hour expiration
+            };
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            currentUser = userData;
+            
+            // Update URL and show dashboard
+            window.location.hash = 'dashboard';
+            formContainer.style.display = 'none';
+            dashboard.style.display = 'block';
+            fetchAndDisplayData();
         } else {
             showError('loginError', data.message || 'Invalid credentials');
         }
@@ -680,4 +700,41 @@ function addTestButton() {
             dashboard.insertBefore(testButton, dashboard.firstChild);
         }
     }
+}
+
+// Logout function
+function doLogout() {
+    console.log('Starting logout process...'); // Debug log
+    
+    // Clear all storage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Reset current user
+    currentUser = null;
+    
+    // Hide dashboard and show login form
+    if (dashboard) dashboard.style.display = 'none';
+    if (formContainer) formContainer.style.display = 'block';
+    
+    // Reset all forms
+    const forms = [loginForm, signupForm, forgotForm, otpForm, newPasswordForm];
+    forms.forEach(form => {
+        if (form) form.reset();
+    });
+    
+    // Call logout API
+    fetch(`${API_URL}/logout.php`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).catch(console.error); // Ignore errors
+    
+    // Update URL and show login form
+    window.location.hash = 'login';
+    toggleForm('login');
+    
+    console.log('Logout completed'); // Debug log
+    return false; // Prevent default anchor behavior
 }
